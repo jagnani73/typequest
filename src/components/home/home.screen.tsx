@@ -1,40 +1,68 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 // ! Using `ts-ignore` here because the declaration file has an incorrect default export of `keypress`
 // @ts-ignore
 import { keypress, Listener } from "keypress.js";
 
 import { BlockComponent } from ".";
 import { RandomColor } from "../../utils/helpers";
-import { BlockProps } from "../../utils/types/home.types";
+import { BlockType } from "../../utils/types/home.types";
 
 const HomeScreen: React.FC = () => {
-  // const [count, setCount] = useState<number>(3);
-  const [blockSettings, setBlockSettings] = useState<BlockProps[]>([
+  const listenerRef = useRef<Listener | null>(null);
+
+  const [selectedBlock, setSelectedBlock] = useState<number | null>(null);
+  const [blockSettings, setBlockSettings] = useState<BlockType[]>([
     {
       backgroundColor: RandomColor(),
       textColor: RandomColor(),
+      binding: "shift a",
+    },
+    {
+      backgroundColor: RandomColor(),
+      textColor: RandomColor(),
+      binding: "shift b",
+    },
+    {
+      backgroundColor: RandomColor(),
+      textColor: RandomColor(),
+      binding: "shift c",
     },
   ]);
 
-  useEffect(() => {
-    const Listener: Listener = new keypress.Listener();
+  const handleBackgroundColor = useCallback((i: number) => {
+    setBlockSettings((prevState) => {
+      const newArray = [...prevState];
+      newArray[i] = {
+        ...newArray[i],
+        backgroundColor: RandomColor(),
+        textColor: RandomColor(),
+      };
+      return newArray;
+    });
+  }, []);
 
-    const list = Listener.simple_combo("shift s", () => {
-      setBlockSettings(() => [
-        {
-          backgroundColor: RandomColor(),
-          textColor: RandomColor(),
-        },
-      ]);
+  useEffect(() => {
+    listenerRef.current = new keypress.Listener() as Listener;
+
+    blockSettings.forEach(({ binding }, i) => {
+      listenerRef.current!.simple_combo(binding, () => {
+        handleBackgroundColor(i);
+      });
     });
 
-    console.log(Listener.get_registered_combos());
+    console.log(listenerRef.current.get_registered_combos());
   }, []);
 
   return (
     <main className="flex h-full w-full">
       {blockSettings.map((block, i) => (
-        <BlockComponent key={i + Math.random()} {...block} />
+        <div
+          className="w-full h-full"
+          key={i + Math.random()}
+          onClick={() => setSelectedBlock(i)}
+        >
+          <BlockComponent block={block} selected={i === selectedBlock} />
+        </div>
       ))}
     </main>
   );
