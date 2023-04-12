@@ -9,10 +9,12 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "keypress.js": "^2.1.5",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
   "devDependencies": {
+    "@types/keypress.js": "^2.1.1",
     "@types/react": "^18.0.28",
     "@types/react-dom": "^18.0.11",
     "@vitejs/plugin-react-swc": "^3.0.0",
