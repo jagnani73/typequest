@@ -1,9 +1,9 @@
 import type { BlockProps } from "../../utils/types/home.types";
+import { useBlockSettings } from "../../utils/store";
 
-const Block: React.FC<BlockProps> = ({
-  block: { backgroundColor, binding },
-  selected,
-}) => {
+const Block: React.FC<BlockProps> = ({ id, selected }) => {
+  const { blockSettings } = useBlockSettings();
+
   return (
     <article
       className={`${
@@ -15,7 +15,7 @@ const Block: React.FC<BlockProps> = ({
           selected ? "rounded-lg shadow-lg shadow-black" : "rounded-none"
         } flex items-center justify-center w-full h-full`}
         style={{
-          backgroundColor: backgroundColor,
+          backgroundColor: blockSettings[id].backgroundColor,
         }}
       >
         <div
@@ -25,7 +25,7 @@ const Block: React.FC<BlockProps> = ({
             color: "white",
           }}
         >
-          {binding.replaceAll(" ", " + ")}
+          {blockSettings[id].binding.replaceAll(" ", " + ")}
         </div>
       </div>
     </article>

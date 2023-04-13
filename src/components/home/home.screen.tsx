@@ -1,73 +1,87 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 // ! Using `ts-ignore` here because the declaration file has an incorrect default export of `keypress`
 // @ts-ignore
-import { keypress, Listener } from "keypress.js";
+import { Combo, keypress, Listener } from "keypress.js";
+import { nanoid } from "nanoid";
 
+import type { BlockContext } from "../../utils/types/store.types";
 import { BlockComponent } from ".";
 import { RandomColor } from "../../utils/helpers";
 import { useBlockSettings } from "../../utils/store";
 
 const HomeScreen: React.FC = () => {
+  const INITIAL_BINDINGS = useMemo<string[]>(
+    () => ["shift a", "shift b", "shift c"],
+    []
+  );
+
   const listenerRef = useRef<Listener | null>(null);
 
   const { blockSettings, setBlockSettings } = useBlockSettings();
 
-  const [selectedBlock, setSelectedBlock] = useState<number | null>(null);
+  const [selectedBlock, setSelectedBlock] = useState<string | null>(null);
   const [newBinding, setNewBinding] = useState<string>("");
 
   useEffect(() => {
     listenerRef.current = new keypress.Listener() as Listener;
 
-    blockSettings.forEach(({ binding }, i) => {
-      const a = listenerRef.current!.simple_combo(binding, () => {
-        backgroundColorHandler(i);
-      });
-      console.log(a);
+    const _blockSettings: BlockContext = {};
+
+    INITIAL_BINDINGS.forEach((binding) => {
+      const id = nanoid();
+      const { keys } = listenerRef.current!.simple_combo(binding, () => {
+        backgroundColorHandler(id);
+      }) as unknown as Combo;
+
+      _blockSettings[id] = {
+        binding: ((keys as unknown as string[]) ?? []).join(" "),
+        backgroundColor: RandomColor(),
+      };
     });
+
+    setBlockSettings(_blockSettings);
 
     return () => {
       listenerRef.current?.destroy();
     };
   }, []);
 
-  const backgroundColorHandler = useCallback((i: number) => {
-    setBlockSettings((prevState) => {
-      const newArray = [...prevState];
-      newArray[i] = {
-        ...newArray[i],
+  const backgroundColorHandler = useCallback((id: string) => {
+    setBlockSettings((prevState) => ({
+      ...prevState,
+      [id]: {
+        ...prevState[id],
         backgroundColor: RandomColor(),
-      };
-      return newArray;
-    });
+      },
+    }));
   }, []);
 
   const selectBlockHandler = useCallback(
-    (i: number) => {
-      if (selectedBlock === i) {
+    (id: string) => {
+      if (selectedBlock === id) {
         setSelectedBlock(null);
         setNewBinding("");
       } else {
-        setSelectedBlock(i);
-        listenerRef.current!.unregister_combo(blockSettings[i].binding);
+        setSelectedBlock(id);
+        listenerRef.current!.unregister_combo(blockSettings[id].binding);
       }
     },
-    [listenerRef, selectedBlock]
+    [listenerRef, selectedBlock, blockSettings]
   );
 
   const changeBindingHandler = useCallback(
-    (keys: string) => {
+    (id: string, keys: string) => {
       if (selectedBlock !== null) {
         listenerRef.current!.simple_combo(keys, () => {
           backgroundColorHandler(selectedBlock);
         });
-        setBlockSettings((prevState) => {
-          const newArray = [...prevState];
-          newArray[selectedBlock] = {
-            ...newArray[selectedBlock],
+        setBlockSettings((prevState) => ({
+          ...prevState,
+          [id]: {
+            ...prevState[id],
             binding: keys,
-          };
-          return newArray;
-        });
+          },
+        }));
         setNewBinding("");
         setSelectedBlock(null);
       }
@@ -86,13 +100,13 @@ const HomeScreen: React.FC = () => {
       </nav>
 
       <main className="flex h-full w-full">
-        {blockSettings.map((block, i) => (
+        {Object.keys(blockSettings).map((id) => (
           <div
+            key={id}
             className="w-full h-full"
-            key={i + Math.random()}
-            onClick={() => selectBlockHandler(i)}
+            onClick={() => selectBlockHandler(id)}
           >
-            <BlockComponent block={block} selected={i === selectedBlock} />
+            <BlockComponent id={id} selected={id === selectedBlock} />
           </div>
         ))}
       </main>
@@ -116,7 +130,7 @@ const HomeScreen: React.FC = () => {
               }
             />
             <button
-              onClick={() => changeBindingHandler(newBinding)}
+              onClick={() => changeBindingHandler(selectedBlock, newBinding)}
               className="bg-black px-2 py-1 rounded text-white text-base"
             >
               Save binding

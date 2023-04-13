@@ -4,7 +4,6 @@ export interface BlockType {
 }
 
 export interface BlockProps {
-  block: BlockType;
+  id: string;
   selected: boolean;
-  //   handleEdit: () => void;
 }
