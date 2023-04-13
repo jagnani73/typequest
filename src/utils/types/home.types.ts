@@ -4,6 +4,7 @@ export interface BlockType {
 }
 
 export interface BlockProps {
-  id: string;
+  backgroundColor: string;
+  binding: string;
   selected: boolean;
 }

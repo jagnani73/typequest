@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 // ! Using `ts-ignore` here because the declaration file has an incorrect default export of `keypress`
 // @ts-ignore
-import { Combo, keypress, Listener } from "keypress.js";
+import { keypress, Listener } from "keypress.js";
 import { nanoid } from "nanoid";
 
 import type { BlockContext } from "../../utils/types/store.types";
-import { BlockComponent } from ".";
+import { BlockComponent, ShortcutComponent } from ".";
 import { RandomColor } from "../../utils/helpers";
 import { useBlockSettings } from "../../utils/store";
 
@@ -26,19 +26,15 @@ const HomeScreen: React.FC = () => {
     listenerRef.current = new keypress.Listener() as Listener;
 
     const _blockSettings: BlockContext = {};
-
     INITIAL_BINDINGS.forEach((binding) => {
       const id = nanoid();
-      const { keys } = listenerRef.current!.simple_combo(binding, () => {
-        backgroundColorHandler(id);
-      }) as unknown as Combo;
 
       _blockSettings[id] = {
-        binding: ((keys as unknown as string[]) ?? []).join(" "),
+        binding: binding,
+        callback: () => backgroundColorHandler(id),
         backgroundColor: RandomColor(),
       };
     });
-
     setBlockSettings(_blockSettings);
 
     return () => {
@@ -100,15 +96,27 @@ const HomeScreen: React.FC = () => {
       </nav>
 
       <main className="flex h-full w-full">
-        {Object.keys(blockSettings).map((id) => (
-          <div
-            key={id}
-            className="w-full h-full"
-            onClick={() => selectBlockHandler(id)}
-          >
-            <BlockComponent id={id} selected={id === selectedBlock} />
-          </div>
-        ))}
+        {listenerRef.current &&
+          Object.entries(blockSettings).map(
+            ([id, { binding, callback, backgroundColor }]) => (
+              <div
+                key={id}
+                className="w-full h-full"
+                onClick={() => selectBlockHandler(id)}
+              >
+                <ShortcutComponent
+                  binding={binding}
+                  callback={callback}
+                  listener={listenerRef.current!}
+                />
+                <BlockComponent
+                  selected={id === selectedBlock}
+                  binding={binding}
+                  backgroundColor={backgroundColor}
+                />
+              </div>
+            )
+          )}
       </main>
 
       <footer className="bg-white h-20 flex items-center justify-center text-center text-xl rounded-t-lg w-full">

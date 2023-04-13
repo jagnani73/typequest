@@ -1,4 +1,7 @@
-export type BlockContext = Record<
-  string,
-  { binding: string; backgroundColor: string }
->;
+export type BlockContext = {
+  [id: string]: {
+    binding: string;
+    callback: (...args: any) => any;
+    backgroundColor: string;
+  };
+};
