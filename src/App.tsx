@@ -1,13 +1,18 @@
 import { HomeScreen } from "./components/home";
-import { Footer } from "./components/shared";
-import { BlockSettingsProvider } from "./utils/store";
+import { Topbar } from "./components/shared";
+import { BlockSettingsProvider, TypequestProvider } from "./utils/store";
 
 const App: React.FC = () => {
   return (
-    <BlockSettingsProvider>
-      <HomeScreen />
-      {/* <Footer /> */}
-    </BlockSettingsProvider>
+    <div className="flex flex-col w-full h-full">
+      <Topbar />
+
+      <TypequestProvider>
+        <BlockSettingsProvider>
+          <HomeScreen />
+        </BlockSettingsProvider>
+      </TypequestProvider>
+    </div>
   );
 };
 

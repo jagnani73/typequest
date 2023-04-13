@@ -1,13 +1,10 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-// ! Using `ts-ignore` here because the declaration file has an incorrect default export of `keypress`
-// @ts-ignore
-import { keypress, Listener } from "keypress.js";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { nanoid } from "nanoid";
 
 import type { BlockContext } from "../../utils/types/store.types";
 import { BlockComponent, ShortcutComponent } from ".";
 import { RandomColor } from "../../utils/helpers";
-import { useBlockSettings } from "../../utils/store";
+import { useBlockSettings, useTypequest } from "../../utils/store";
 
 const HomeScreen: React.FC = () => {
   const INITIAL_BINDINGS = useMemo<string[]>(
@@ -15,7 +12,7 @@ const HomeScreen: React.FC = () => {
     []
   );
 
-  const listenerRef = useRef<Listener | null>(null);
+  const { typequest } = useTypequest();
 
   const { blockSettings, setBlockSettings } = useBlockSettings();
 
@@ -23,12 +20,9 @@ const HomeScreen: React.FC = () => {
   const [newBinding, setNewBinding] = useState<string>("");
 
   useEffect(() => {
-    listenerRef.current = new keypress.Listener() as Listener;
-
     const _blockSettings: BlockContext = {};
     INITIAL_BINDINGS.forEach((binding) => {
       const id = nanoid();
-
       _blockSettings[id] = {
         binding: binding,
         callback: () => backgroundColorHandler(id),
@@ -36,10 +30,6 @@ const HomeScreen: React.FC = () => {
       };
     });
     setBlockSettings(_blockSettings);
-
-    return () => {
-      listenerRef.current?.destroy();
-    };
   }, []);
 
   const backgroundColorHandler = useCallback((id: string) => {
@@ -54,21 +44,23 @@ const HomeScreen: React.FC = () => {
 
   const selectBlockHandler = useCallback(
     (id: string) => {
-      if (selectedBlock === id) {
-        setSelectedBlock(null);
-        setNewBinding("");
-      } else {
-        setSelectedBlock(id);
-        listenerRef.current!.unregister_combo(blockSettings[id].binding);
+      if (typequest) {
+        if (selectedBlock === id) {
+          setSelectedBlock(null);
+          setNewBinding("");
+        } else {
+          setSelectedBlock(id);
+          typequest.unregister_combo(blockSettings[id].binding);
+        }
       }
     },
-    [listenerRef, selectedBlock, blockSettings]
+    [typequest, selectedBlock, blockSettings]
   );
 
   const changeBindingHandler = useCallback(
     (id: string, keys: string) => {
-      if (selectedBlock !== null) {
-        listenerRef.current!.simple_combo(keys, () => {
+      if (typequest && selectedBlock !== null) {
+        typequest.simple_combo(keys, () => {
           backgroundColorHandler(selectedBlock);
         });
         setBlockSettings((prevState) => ({
@@ -82,21 +74,13 @@ const HomeScreen: React.FC = () => {
         setSelectedBlock(null);
       }
     },
-    [newBinding, selectedBlock, listenerRef]
+    [newBinding, selectedBlock, typequest]
   );
 
   return (
-    <div className="flex flex-col w-full h-full">
-      <nav className="bg-white h-28 px-6 flex items-center justify-center text-center text-xl rounded-t-lg w-full">
-        <p>
-          Press the sequence shown in a block to change it's background color.
-          The triggers are sequence-sensitive. Click on a block again to
-          deselect it.
-        </p>
-      </nav>
-
+    <>
       <main className="flex h-full w-full">
-        {listenerRef.current &&
+        {typequest &&
           Object.entries(blockSettings).map(
             ([id, { binding, callback, backgroundColor }]) => (
               <div
@@ -107,7 +91,7 @@ const HomeScreen: React.FC = () => {
                 <ShortcutComponent
                   binding={binding}
                   callback={callback}
-                  listener={listenerRef.current!}
+                  listener={typequest}
                 />
                 <BlockComponent
                   selected={id === selectedBlock}
@@ -148,7 +132,7 @@ const HomeScreen: React.FC = () => {
           <p>Click on a block to edit its's trigger.</p>
         )}
       </footer>
-    </div>
+    </>
   );
 };
 

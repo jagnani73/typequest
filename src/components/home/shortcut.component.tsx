@@ -1,11 +1,11 @@
-import type { Listener } from "keypress.js";
 import { useEffect } from "react";
+import type { ShortcutComponentProps } from "../../utils/types/typequest.types";
 
-const ShortcutComponent: React.FC<{
-  listener: Listener;
-  binding: string;
-  callback: (...args: any) => any;
-}> = ({ binding, callback, listener }) => {
+const ShortcutComponent: React.FC<ShortcutComponentProps> = ({
+  binding,
+  callback,
+  listener,
+}) => {
   useEffect(() => {
     listener.simple_combo(binding, callback);
   }, []);
