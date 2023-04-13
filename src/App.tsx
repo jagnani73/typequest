@@ -1,6 +1,7 @@
 import { HomeScreen } from "./components/home";
 import { Topbar } from "./components/shared";
-import { BlockSettingsProvider, TypequestProvider } from "./utils/store";
+import { TypequestProvider } from "./lib";
+import { BlockSettingsProvider } from "./utils/store";
 
 const App: React.FC = () => {
   return (

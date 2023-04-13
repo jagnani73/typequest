@@ -2,9 +2,10 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { nanoid } from "nanoid";
 
 import type { BlockContext } from "../../utils/types/store.types";
-import { BlockComponent, ShortcutComponent } from ".";
+import { BlockComponent } from ".";
 import { RandomColor } from "../../utils/helpers";
-import { useBlockSettings, useTypequest } from "../../utils/store";
+import { useBlockSettings } from "../../utils/store";
+import { ShortcutComponent, useTypequest } from "../../lib";
 
 const HomeScreen: React.FC = () => {
   const INITIAL_BINDINGS = useMemo<string[]>(
@@ -80,27 +81,22 @@ const HomeScreen: React.FC = () => {
   return (
     <>
       <main className="flex h-full w-full">
-        {typequest &&
-          Object.entries(blockSettings).map(
-            ([id, { binding, callback, backgroundColor }]) => (
-              <div
-                key={id}
-                className="w-full h-full"
-                onClick={() => selectBlockHandler(id)}
-              >
-                <ShortcutComponent
-                  binding={binding}
-                  callback={callback}
-                  listener={typequest}
-                />
-                <BlockComponent
-                  selected={id === selectedBlock}
-                  binding={binding}
-                  backgroundColor={backgroundColor}
-                />
-              </div>
-            )
-          )}
+        {Object.entries(blockSettings).map(
+          ([id, { binding, callback, backgroundColor }]) => (
+            <div
+              key={id}
+              className="w-full h-full"
+              onClick={() => selectBlockHandler(id)}
+            >
+              <ShortcutComponent binding={binding} callback={callback} />
+              <BlockComponent
+                selected={id === selectedBlock}
+                binding={binding}
+                backgroundColor={backgroundColor}
+              />
+            </div>
+          )
+        )}
       </main>
 
       <footer className="bg-white h-20 flex items-center justify-center text-center text-xl rounded-t-lg w-full">
