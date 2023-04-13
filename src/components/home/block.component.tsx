@@ -1,7 +1,7 @@
 import type { BlockProps } from "../../utils/types/home.types";
 
 const Block: React.FC<BlockProps> = ({
-  block: { backgroundColor, textColor, binding },
+  block: { backgroundColor, binding },
   selected,
 }) => {
   return (
@@ -12,14 +12,21 @@ const Block: React.FC<BlockProps> = ({
     >
       <div
         className={`${
-          selected ? "rounded-lg" : "rounded-none"
+          selected ? "rounded-lg shadow-lg shadow-black" : "rounded-none"
         } flex items-center justify-center w-full h-full`}
         style={{
           backgroundColor: backgroundColor,
-          color: textColor,
         }}
       >
-        <div className="text-2xl">{binding}</div>
+        <div
+          className="text-2xl font-bold"
+          style={{
+            mixBlendMode: "difference",
+            color: "white",
+          }}
+        >
+          {binding.replaceAll(" ", " + ")}
+        </div>
       </div>
     </article>
   );

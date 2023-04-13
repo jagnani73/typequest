@@ -1,6 +1,5 @@
 export interface BlockType {
   backgroundColor: string;
-  textColor: string;
   binding: string;
 }
 
