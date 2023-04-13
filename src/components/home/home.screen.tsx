@@ -13,20 +13,21 @@ const HomeScreen: React.FC = () => {
   const { blockSettings, setBlockSettings } = useBlockSettings();
 
   const [selectedBlock, setSelectedBlock] = useState<number | null>(null);
+  const [newBinding, setNewBinding] = useState<string>("");
 
   useEffect(() => {
     listenerRef.current = new keypress.Listener() as Listener;
 
     blockSettings.forEach(({ binding }, i) => {
       listenerRef.current!.simple_combo(binding, () => {
-        handleBackgroundColor(i);
+        backgroundColorHandler(i);
       });
     });
 
     console.log(listenerRef.current.get_registered_combos());
   }, []);
 
-  const handleBackgroundColor = useCallback((i: number) => {
+  const backgroundColorHandler = useCallback((i: number) => {
     setBlockSettings((prevState) => {
       const newArray = [...prevState];
       newArray[i] = {
@@ -41,22 +42,28 @@ const HomeScreen: React.FC = () => {
     (i: number) => {
       setSelectedBlock(i);
       listenerRef.current!.unregister_combo(blockSettings[i].binding);
-      const { keys } = listenerRef.current!.register_combo({
-        keys: "w e",
-      });
-      setBlockSettings((prevState) => {
-        const newArray = [...prevState];
-        newArray[i] = {
-          ...newArray[i],
-          binding: keys!,
-        };
-        return newArray;
-      });
-      listenerRef.current!.simple_combo(keys!, () => {
-        handleBackgroundColor(i);
-      });
     },
     [listenerRef]
+  );
+
+  const changeBindingHandler = useCallback(
+    (keys: string) => {
+      if (selectedBlock !== null) {
+        listenerRef.current!.simple_combo(keys, () => {
+          backgroundColorHandler(selectedBlock);
+        });
+        setBlockSettings((prevState) => {
+          const newArray = [...prevState];
+          newArray[selectedBlock] = {
+            ...newArray[selectedBlock],
+            binding: keys,
+          };
+          return newArray;
+        });
+        setNewBinding("");
+      }
+    },
+    [newBinding, selectedBlock, listenerRef]
   );
 
   return (
@@ -73,16 +80,29 @@ const HomeScreen: React.FC = () => {
         ))}
       </main>
 
-      {selectedBlock ? (
-        <footer className="bg-white fixed bottom-0 left-0 w-full">
-          <input
-            type="text"
-            placeholder={blockSettings[selectedBlock].binding}
-          />
-        </footer>
-      ) : (
-        <></>
-      )}
+      <footer className="bg-white fixed bottom-0 left-0 w-full">
+        {selectedBlock !== null ? (
+          <div>
+            <input
+              readOnly
+              type="text"
+              value={newBinding}
+              placeholder={blockSettings[selectedBlock].binding}
+              onKeyDown={(e) =>
+                setNewBinding((prevState) =>
+                  `${prevState} ${e.key.toLowerCase()}`.trim()
+                )
+              }
+            />
+
+            <button onClick={() => changeBindingHandler(newBinding)}>
+              Save binding
+            </button>
+          </div>
+        ) : (
+          <p>Click on a block to edit it</p>
+        )}
+      </footer>
     </>
   );
 };
